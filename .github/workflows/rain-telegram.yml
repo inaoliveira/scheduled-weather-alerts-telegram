@@ -1,0 +1,46 @@
+name: Rain Alert to Telegram (PR)
+
+on:
+  schedule:
+    - cron: "0 9 * * *"     # 06:00 BRT
+    - cron: "50 19 * * *"   # 16:50 BRT
+    - cron: "0 0 * * *"     # 21:00 BRT
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "today ou tomorrow (teste manual)"
+        required: false
+        default: "today"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Decide execution mode
+        id: mode
+        run: |
+          HOUR=$(date -u +%H)
+          MIN=$(date -u +%M)
+
+          if [ "$HOUR" = "00" ] && [ "$MIN" = "00" ]; then
+            echo "value=tomorrow" >> $GITHUB_OUTPUT
+          else
+            echo "value=today" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run weat
